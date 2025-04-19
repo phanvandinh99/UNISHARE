@@ -220,3 +220,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/user-statistics', [UserManagementController::class, 'statistics']);
     });
 });
+
+// Thêm route test để kiểm tra API
+Route::get('/test', function () {
+    return response()->json(['message' => 'API is working!']);
+});

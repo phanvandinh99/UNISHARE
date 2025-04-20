@@ -24,46 +24,46 @@ class UserManagementController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
-        
+
         // Tìm kiếm
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('student_id', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('student_id', 'like', "%{$search}%");
             });
         }
-        
+
         // Lọc theo vai trò
         if ($request->has('role')) {
             $query->where('role', $request->role);
         }
-        
+
         // Lọc theo trạng thái
         if ($request->has('is_active')) {
             $query->where('is_active', $request->is_active === 'true');
         }
-        
+
         // Lọc theo trường đại học
         if ($request->has('university')) {
             $query->where('university', 'like', "%{$request->university}%");
         }
-        
+
         // Lọc theo khoa
         if ($request->has('department')) {
             $query->where('department', 'like', "%{$request->department}%");
         }
-        
+
         // Sắp xếp
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
-        
+
         // Phân trang
         $perPage = $request->input('per_page', 15);
         $users = $query->paginate($perPage);
-        
+
         return response()->json([
             'success' => true,
             'data' => $users,
@@ -117,7 +117,7 @@ class UserManagementController extends Controller
     public function show($id)
     {
         $user = User::with(['documents', 'posts', 'groups'])->findOrFail($id);
-        
+
         // Thống kê hoạt động
         $activityStats = [
             'documents_count' => $user->documents()->count(),
@@ -128,7 +128,7 @@ class UserManagementController extends Controller
             'storage_used' => $user->fileUploads()->sum('size'),
             'storage_formatted' => $this->formatBytes($user->fileUploads()->sum('size')),
         ];
-        
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -144,7 +144,7 @@ class UserManagementController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => [
@@ -172,11 +172,11 @@ class UserManagementController extends Controller
         $user->university = $request->university;
         $user->department = $request->department;
         $user->student_id = $request->student_id;
-        
+
         if ($request->has('is_active')) {
             $user->is_active = $request->is_active;
         }
-        
+
         $user->save();
 
         return response()->json([
@@ -192,7 +192,7 @@ class UserManagementController extends Controller
     public function updatePassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'password' => 'required|string|min:8',
         ]);
@@ -219,7 +219,7 @@ class UserManagementController extends Controller
     public function updateRole(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'role' => 'required|string|in:student,lecturer,moderator,admin',
         ]);
@@ -247,7 +247,7 @@ class UserManagementController extends Controller
     public function ban(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         $validator = Validator::make($request->all(), [
             'reason' => 'required|string',
         ]);
@@ -279,7 +279,7 @@ class UserManagementController extends Controller
     public function unban($id)
     {
         $user = User::findOrFail($id);
-        
+
         $user->is_active = true;
         $user->ban_reason = null;
         $user->banned_at = null;
@@ -297,7 +297,7 @@ class UserManagementController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        
+
         // Kiểm tra xem người dùng có phải là admin duy nhất không
         if ($user->role === 'admin') {
             $adminCount = User::where('role', 'admin')->count();
@@ -308,10 +308,10 @@ class UserManagementController extends Controller
                 ], 422);
             }
         }
-        
+
         // Thu hồi tất cả token
         $user->tokens()->delete();
-        
+
         // Xóa người dùng (soft delete)
         $user->delete();
 
@@ -332,7 +332,7 @@ class UserManagementController extends Controller
             ['value' => 'moderator', 'label' => 'Người kiểm duyệt'],
             ['value' => 'admin', 'label' => 'Quản trị viên'],
         ];
-        
+
         return response()->json([
             'success' => true,
             'data' => $roles,
@@ -346,24 +346,24 @@ class UserManagementController extends Controller
     {
         // Tổng số người dùng
         $totalUsers = User::count();
-        
+
         // Người dùng theo vai trò
         $usersByRole = User::select('role', \DB::raw('count(*) as count'))
             ->groupBy('role')
             ->get()
             ->pluck('count', 'role')
             ->toArray();
-        
+
         // Người dùng hoạt động/không hoạt động
         $activeUsers = User::where('is_active', true)->count();
         $inactiveUsers = User::where('is_active', false)->count();
-        
+
         // Người dùng mới trong 7 ngày qua
         $newUsers = User::where('created_at', '>=', \Carbon\Carbon::now()->subDays(7))->count();
-        
+
         // Người dùng đăng nhập gần đây
         $recentlyActiveUsers = User::where('last_login_at', '>=', \Carbon\Carbon::now()->subDays(7))->count();
-        
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -383,13 +383,13 @@ class UserManagementController extends Controller
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= pow(1024, $pow);
-        
+
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

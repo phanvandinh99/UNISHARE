@@ -24,12 +24,12 @@ class CheckUserActive
                     'reason' => auth()->user()->ban_reason,
                 ], 403);
             }
-            
+
             // Nếu không, đăng xuất và chuyển hướng
             auth()->logout();
             return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
         }
-        
+
         return $next($request);
     }
 }

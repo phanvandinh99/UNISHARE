@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -21,12 +21,14 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'avatar',
-        'bio',
         'university',
         'department',
         'student_id',
+        'bio',
+        'avatar',
         'is_active',
+        'last_login_at',
+        'email_verified_at',
     ];
 
     /**
@@ -48,10 +50,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'last_login_at' => 'datetime',
     ];
 
     /**
-     * Get the documents uploaded by the user.
+     * Get the documents for the user.
      */
     public function documents()
     {
@@ -59,7 +62,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the posts created by the user.
+     * Get the posts for the user.
      */
     public function posts()
     {
@@ -67,20 +70,46 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the groups created by the user.
+     * Get the comments for the user.
      */
-    public function createdGroups()
+    public function comments()
     {
-        return $this->hasMany(Group::class, 'creator_id');
+        return $this->hasMany(DocumentComment::class);
     }
 
     /**
-     * Get the groups the user is a member of.
+     * Get the post comments for the user.
+     */
+    public function postComments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
+
+    /**
+     * Get the ratings for the user.
+     */
+    public function ratings()
+    {
+        return $this->hasMany(DocumentRating::class);
+    }
+
+    /**
+     * Get the groups that the user is a member of.
      */
     public function groups()
     {
         return $this->belongsToMany(Group::class, 'group_members')
             ->withPivot('role', 'status')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the chats that the user is a participant of.
+     */
+    public function chats()
+    {
+        return $this->belongsToMany(Chat::class, 'chat_participants')
+            ->withPivot('is_admin', 'last_read_at')
             ->withTimestamps();
     }
 
@@ -93,49 +122,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the chats the user is participating in.
-     */
-    public function chats()
-    {
-        return $this->belongsToMany(Chat::class, 'chat_participants')
-            ->withPivot('last_read_at')
-            ->withTimestamps();
-    }
-
-    /**
-     * Get the file uploads by the user.
-     */
-    public function fileUploads()
-    {
-        return $this->hasMany(FileUpload::class);
-    }
-
-    /**
-     * Get the document ratings by the user.
-     */
-    public function documentRatings()
-    {
-        return $this->hasMany(DocumentRating::class);
-    }
-
-    /**
-     * Get the document comments by the user.
-     */
-    public function documentComments()
-    {
-        return $this->hasMany(DocumentComment::class);
-    }
-
-    /**
-     * Get the post comments by the user.
-     */
-    public function postComments()
-    {
-        return $this->hasMany(PostComment::class);
-    }
-
-    /**
-     * Get the likes by the user.
+     * Get the likes for the user.
      */
     public function likes()
     {
@@ -143,23 +130,31 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if the user is a student.
+     * Get the reports created by the user.
      */
-    public function isStudent()
+    public function reports()
     {
-        return $this->hasRole('student');
+        return $this->hasMany(Report::class, 'reporter_id');
     }
 
     /**
-     * Check if the user is a lecturer.
+     * Get the AI chats for the user.
      */
-    public function isLecturer()
+    public function aiChats()
     {
-        return $this->hasRole('lecturer');
+        return $this->hasMany(AIChat::class);
     }
 
     /**
-     * Check if the user is a moderator.
+     * Check if user is admin.
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Check if user is moderator.
      */
     public function isModerator()
     {
@@ -167,10 +162,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if the user is an admin.
+     * Check if user is lecturer.
      */
-    public function isAdmin()
+    public function isLecturer()
     {
-        return $this->hasRole('admin');
+        return $this->hasRole('lecturer');
+    }
+
+    /**
+     * Check if user is student.
+     */
+    public function isStudent()
+    {
+        return $this->hasRole('student');
     }
 }

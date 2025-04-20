@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\User;
 
 class RoleAndPermissionSeeder extends Seeder
 {
@@ -19,74 +18,62 @@ class RoleAndPermissionSeeder extends Seeder
 
         // Create permissions
         $permissions = [
-            // User permissions
-            'view any user',
-            'view user',
-            'create user',
-            'update user',
-            'delete user',
-            'ban user',
-            'unban user',
-            'promote user',
-            'demote user',
-
             // Document permissions
-            'view any document',
-            'view document',
-            'upload document',
-            'update document',
-            'delete document',
-            'delete any document',
-            'approve document',
-            'reject document',
-            'download document',
-            'rate document',
-            'comment on document',
+            'view documents',
+            'create documents',
+            'edit documents',
+            'delete documents',
+            'approve documents',
+            'reject documents',
+            'download documents',
+            'rate documents',
+            'comment documents',
+            'mark official documents',
 
             // Post permissions
-            'view any post',
-            'view post',
-            'create post',
-            'update post',
-            'delete post',
-            'delete any post',
-            'like post',
-            'comment on post',
+            'view posts',
+            'create posts',
+            'edit posts',
+            'delete posts',
+            'like posts',
+            'comment posts',
 
             // Group permissions
-            'view any group',
-            'view group',
-            'create group',
-            'update group',
-            'delete group',
-            'join group',
-            'leave group',
-            'invite to group',
-            'remove from group',
+            'view groups',
+            'create groups',
+            'edit groups',
+            'delete groups',
+            'join groups',
+            'leave groups',
+            'manage group members',
 
             // Chat permissions
-            'view any chat',
-            'view chat',
-            'create chat',
-            'update chat',
-            'delete chat',
-            'send message',
-            'delete message',
-            'delete any message',
+            'view chats',
+            'create chats',
+            'send messages',
+            'delete messages',
+            'create group chats',
+            'manage group chats',
+
+            // User management permissions
+            'view users',
+            'create users',
+            'edit users',
+            'delete users',
+            'ban users',
+            'unban users',
+            'assign roles',
 
             // Report permissions
-            'create report',
-            'view any report',
-            'resolve report',
-
-            // Category permissions
-            'view any category',
-            'create category',
-            'update category',
-            'delete category',
+            'view reports',
+            'create reports',
+            'resolve reports',
 
             // Statistics permissions
             'view statistics',
+
+            // AI chat permissions
+            'use ai chat',
         ];
 
         foreach ($permissions as $permission) {
@@ -94,171 +81,83 @@ class RoleAndPermissionSeeder extends Seeder
         }
 
         // Create roles and assign permissions
-        $roles = [
-            'student' => [
-                'view any user',
-                'view user',
-                'view any document',
-                'view document',
-                'upload document',
-                'update document',
-                'delete document',
-                'download document',
-                'rate document',
-                'comment on document',
-                'view any post',
-                'view post',
-                'create post',
-                'update post',
-                'delete post',
-                'like post',
-                'comment on post',
-                'view any group',
-                'view group',
-                'create group',
-                'update group',
-                'delete group',
-                'join group',
-                'leave group',
-                'invite to group',
-                'view any chat',
-                'view chat',
-                'create chat',
-                'update chat',
-                'delete chat',
-                'send message',
-                'delete message',
-                'create report',
-                'view any category',
-            ],
-            'lecturer' => [
-                'view any user',
-                'view user',
-                'view any document',
-                'view document',
-                'upload document',
-                'update document',
-                'delete document',
-                'download document',
-                'rate document',
-                'comment on document',
-                'view any post',
-                'view post',
-                'create post',
-                'update post',
-                'delete post',
-                'like post',
-                'comment on post',
-                'view any group',
-                'view group',
-                'create group',
-                'update group',
-                'delete group',
-                'join group',
-                'leave group',
-                'invite to group',
-                'remove from group',
-                'view any chat',
-                'view chat',
-                'create chat',
-                'update chat',
-                'delete chat',
-                'send message',
-                'delete message',
-                'create report',
-                'view any category',
-            ],
-            'moderator' => [
-                'view any user',
-                'view user',
-                'ban user',
-                'unban user',
-                'view any document',
-                'view document',
-                'upload document',
-                'update document',
-                'delete document',
-                'delete any document',
-                'approve document',
-                'reject document',
-                'download document',
-                'rate document',
-                'comment on document',
-                'view any post',
-                'view post',
-                'create post',
-                'update post',
-                'delete post',
-                'delete any post',
-                'like post',
-                'comment on post',
-                'view any group',
-                'view group',
-                'create group',
-                'update group',
-                'delete group',
-                'join group',
-                'leave group',
-                'invite to group',
-                'remove from group',
-                'view any chat',
-                'view chat',
-                'create chat',
-                'update chat',
-                'delete chat',
-                'send message',
-                'delete message',
-                'delete any message',
-                'create report',
-                'view any report',
-                'resolve report',
-                'view any category',
-                'create category',
-                'update category',
-                'delete category',
-            ],
-            'admin' => $permissions, // Admin gets all permissions
-        ];
+        $adminRole = Role::create(['name' => 'admin']);
+        $adminRole->givePermissionTo(Permission::all());
 
-        foreach ($roles as $roleName => $rolePermissions) {
-            $role = Role::create(['name' => $roleName]);
-            $role->syncPermissions($rolePermissions);
-        }
-
-        // Create a super admin user
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@unishare.edu',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
+        $moderatorRole = Role::create(['name' => 'moderator']);
+        $moderatorRole->givePermissionTo([
+            'view documents',
+            'approve documents',
+            'reject documents',
+            'download documents',
+            'view posts',
+            'delete posts',
+            'view reports',
+            'resolve reports',
+            'view users',
+            'ban users',
+            'unban users',
+            'view statistics',
+            'use ai chat',
         ]);
-        $admin->assignRole('admin');
 
-        // Create a moderator user
-        $moderator = User::create([
-            'name' => 'Moderator',
-            'email' => 'moderator@unishare.edu',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
+        $lecturerRole = Role::create(['name' => 'lecturer']);
+        $lecturerRole->givePermissionTo([
+            'view documents',
+            'create documents',
+            'edit documents',
+            'delete documents',
+            'download documents',
+            'rate documents',
+            'comment documents',
+            'mark official documents',
+            'view posts',
+            'create posts',
+            'edit posts',
+            'delete posts',
+            'like posts',
+            'comment posts',
+            'view groups',
+            'create groups',
+            'edit groups',
+            'join groups',
+            'leave groups',
+            'view chats',
+            'create chats',
+            'send messages',
+            'create group chats',
+            'view reports',
+            'create reports',
+            'use ai chat',
         ]);
-        $moderator->assignRole('moderator');
 
-        // Create a lecturer user
-        $lecturer = User::create([
-            'name' => 'Lecturer',
-            'email' => 'lecturer@unishare.edu',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
+        $studentRole = Role::create(['name' => 'student']);
+        $studentRole->givePermissionTo([
+            'view documents',
+            'create documents',
+            'edit documents',
+            'delete documents',
+            'download documents',
+            'rate documents',
+            'comment documents',
+            'view posts',
+            'create posts',
+            'edit posts',
+            'delete posts',
+            'like posts',
+            'comment posts',
+            'view groups',
+            'create groups',
+            'edit groups',
+            'join groups',
+            'leave groups',
+            'view chats',
+            'create chats',
+            'send messages',
+            'create group chats',
+            'view reports',
+            'create reports',
+            'use ai chat',
         ]);
-        $lecturer->assignRole('lecturer');
-
-        // Create a student user
-        $student = User::create([
-            'name' => 'Student',
-            'email' => 'student@unishare.edu',
-            'password' => bcrypt('password'),
-            'email_verified_at' => now(),
-        ]);
-        $student->assignRole('student');
     }
 }
